@@ -22,13 +22,13 @@
 - **Safe property validation** — `/home/runner/work/n8n/n8n/packages/workflow/src/utils.ts#L367-L401` centralizes the denylist for unsafe keys, reused by the sandbox to block prototype pollution and runtime escapes.
 
 ## Example exploit payload (pre-fix)
-On vulnerable versions, a malicious workflow field could include a JavaScript expression that pivots to the `Function` constructor through `this` and prototype access. For example, the following payload would resolve and execute with workflow privileges (shown here with the harmless effect of returning the working directory):
+On vulnerable versions, a malicious workflow field could include a JavaScript expression that escapes the sandbox by accessing the `Function` constructor through prototype chain manipulation. For example, the following payload would resolve and execute with workflow privileges (shown here with the harmless effect of returning the working directory):
 
 ```text
 {{ (function () { return this.constructor.constructor('return process.cwd()')() })() }}
 ```
 
-Because the fix now binds `this` to an inert object, blocks unsafe properties (`constructor`, `__proto__`, `prototype`), and removes dangerous globals, this payload is rejected under v1.122.0+.
+Because the fix now binds `this` to an inert object, blocks unsafe properties (`constructor`, `__proto__`, `prototype`), and removes dangerous globals, this payload is rejected under v1.122.0+. Do not run this payload in production workflows—even for testing—as it demonstrates an RCE technique that attackers could adapt.
 
 ## Recommendations
 - Upgrade all deployments to `v1.122.0` or later so the sandboxing and global restrictions above are applied.
